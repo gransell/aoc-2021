@@ -25,12 +25,12 @@ fn part1(lines: &[String]) {
   println!("Power: {}", gamma * epsilon);
 }
 
-fn generate<F>(lines: &Vec<String>, f: F) -> i32
+fn generate<F>(lines: &[String], f: F) -> i32
 where
   F: Fn(i32, i32) -> bool,
 {
   let length = lines.first().unwrap().len();
-  let string = (0..length).fold(lines.clone(), |acc, idx| {
+  let string = (0..length).fold(lines.to_owned(), |acc, idx| {
     if acc.len() == 1 {
       return acc;
     }
@@ -43,18 +43,16 @@ where
       });
     let f_res = f(num_bits.0, num_bits.1);
     let to_keep = if f_res { '0' } else { '1' };
-    let result = acc
+    acc
       .iter()
       .filter(|line| line.chars().nth(idx) == Some(to_keep))
       .map(|line| line.to_owned())
-      .collect();
-    // println!("{:?}", result);
-    return result;
+      .collect()
   });
   i32::from_str_radix(string.first().unwrap(), 2).unwrap()
 }
 
-fn part2(lines: &Vec<String>) {
+fn part2(lines: &[String]) {
   let oxygen = generate(lines, |a, b| a > b);
   let co2 = generate(lines, |a, b| a <= b);
   println!("Oxygen: {}", oxygen);
