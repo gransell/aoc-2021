@@ -9,15 +9,14 @@ use itertools::Itertools;
 fn calculate_cost_2(start_pos: i32, end_pos: i32) -> i32 {
   let min: i32 = min(start_pos, end_pos);
   let max = max(start_pos, end_pos);
-  (min..max)
-    .enumerate()
-    .fold(0, |acc, (pos, _)| acc + pos + 1) as i32
+  let n = (max - (min - 1)) - 1;
+  ((n * (n + 1)) as f32 / 2.0) as i32
 }
 
 #[test]
 fn test_calculate() {
-  let cost = calculate_cost_2(2, 5);
-  assert_eq!(cost, 6);
+  let cost = calculate_cost_2(5, 16);
+  assert_eq!(cost, 66);
 }
 
 fn part_1(input: &str) {
