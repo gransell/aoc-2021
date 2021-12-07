@@ -4,6 +4,36 @@ pub mod parse {
 
   pub trait Parser<'a, Output> {
     fn parse(&self, input: &'a str) -> ParseResult<'a, Output>;
+
+    fn map<F, NewOutput>(self, map_fn: F) -> BoxedParser<'a, NewOutput>
+    where
+      Self: Sized + 'a,
+      Output: 'a,
+      NewOutput: 'a,
+      F: Fn(Output) -> NewOutput + 'a,
+    {
+      BoxedParser::new(map(self, map_fn))
+    }
+
+    fn and_then<F, NextParser, NewOutput>(self, f: F) -> BoxedParser<'a, NewOutput>
+    where
+      Self: Sized + 'a,
+      Output: 'a,
+      NewOutput: 'a,
+      NextParser: Parser<'a, NewOutput> + 'a,
+      F: Fn(Output) -> NextParser + 'a,
+    {
+      BoxedParser::new(and_then(self, f))
+    }
+
+    fn pred<F>(self, pred_fn: F) -> BoxedParser<'a, Output>
+    where
+      Self: Sized + 'a,
+      Output: 'a,
+      F: Fn(&Output) -> bool + 'a,
+    {
+      BoxedParser::new(pred(self, pred_fn))
+    }
   }
 
   impl<'a, F, Output> Parser<'a, Output> for F
@@ -15,7 +45,7 @@ pub mod parse {
     }
   }
 
-  struct BoxedParser<'a, Output> {
+  pub struct BoxedParser<'a, Output> {
     parser: Box<dyn Parser<'a, Output> + 'a>,
   }
 
@@ -146,6 +176,29 @@ pub mod parse {
         }
       }
       Err(input)
+    }
+  }
+
+  pub fn either<'a, P1, P2, A>(parser1: P1, parser2: P2) -> impl Parser<'a, A>
+  where
+    P1: Parser<'a, A>,
+    P2: Parser<'a, A>,
+  {
+    move |input| match parser1.parse(input) {
+      ok @ Ok(_) => ok,
+      Err(_) => parser2.parse(input),
+    }
+  }
+
+  pub fn and_then<'a, P, F, A, B, NextP>(parser: P, f: F) -> impl Parser<'a, B>
+  where
+    P: Parser<'a, A>,
+    NextP: Parser<'a, B>,
+    F: Fn(A) -> NextP,
+  {
+    move |input| match parser.parse(input) {
+      Ok((next_input, result)) => f(result).parse(next_input),
+      Err(err) => Err(err),
     }
   }
 
