@@ -1,4 +1,3 @@
-use core::num;
 use std::io::{self, Read};
 
 use itertools::Itertools;
@@ -42,10 +41,6 @@ impl Bingo {
 
   fn current_round_number(&self) -> i32 {
     self.numbers[self.current_round - 1]
-  }
-
-  fn check_winning_board(&self) -> Option<&Board> {
-    self.boards.iter().find(|board| is_winning_board(board))
   }
 
   fn check_and_remove_winning_board(&mut self) -> Option<(Board, i32)> {
