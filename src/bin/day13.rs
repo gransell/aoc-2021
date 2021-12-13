@@ -1,7 +1,6 @@
 use itertools::Itertools;
 use regex::Regex;
 use std::{
-  cmp::max,
   collections::HashSet,
   io::{self, Read},
 };
@@ -18,26 +17,17 @@ enum Fold {
   AlongY(i32),
 }
 
-struct ParseResult {
-  dots: HashSet<Dot>,
-  max_x: i32,
-}
-
-fn parse_dots(input: &str) -> ParseResult {
+fn parse_dots(input: &str) -> HashSet<Dot> {
   let re = Regex::new(r"(\d+),(\d+)").unwrap();
-  let mut max_x = 0;
-  let dots = input
+  input
     .split('\n')
     .map(|line| {
       let capture = re.captures(line).unwrap();
       let x = capture[1].parse::<i32>().unwrap();
       let y = capture[2].parse::<i32>().unwrap();
-      max_x = max(max_x, x);
       Dot { x, y }
     })
-    .collect();
-
-  ParseResult { dots, max_x }
+    .collect()
 }
 
 fn parse_folds(input: &str) -> Vec<Fold> {
@@ -108,7 +98,7 @@ fn part_1(input: &str) {
   let dots_end_idx = input.find("\n\n").unwrap();
   let mut parsed = parse_dots(&input[..dots_end_idx]);
   let folds = parse_folds(&input[dots_end_idx + 2..]);
-  let remaining = fold(&mut parsed.dots, folds.first().unwrap());
+  let remaining = fold(&mut parsed, folds.first().unwrap());
   println!("Remaining {:?}", remaining.len());
 }
 
@@ -116,9 +106,7 @@ fn part_2(input: &str) {
   let dots_end_idx = input.find("\n\n").unwrap();
   let parsed = parse_dots(&input[..dots_end_idx]);
   let folds = parse_folds(&input[dots_end_idx + 2..]);
-  let remaining = folds
-    .iter()
-    .fold(parsed.dots, |mut acc, f| fold(&mut acc, f));
+  let remaining = folds.iter().fold(parsed, |mut acc, f| fold(&mut acc, f));
 
   let max_x = remaining.iter().map(|dot| dot.x).max().unwrap() + 1;
   let sorted = remaining.iter().sorted().collect_vec();
